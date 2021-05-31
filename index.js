@@ -1,39 +1,62 @@
-const core = require('@actions/core');
-const github = require('@actions/github');
-const https = require("https")
+const core = require("@actions/core")
+const fs = require("fs");
+const path = require("path");
+const readline = require('readline');
+const simpleGit = require('simple-git');
 
-const githubToken = core.getInput('github_token');
-const repo = core.getInput('repo');
 
-const requestOptions = {
-  hostname: 'api.github.com',
-  path: `/repos/${repo}`,
-  headers: { 
-    'User-Agent': 'Mozilla/5.0',
-  }
-};
-if (githubToken) {
-  console.log("Use GITHUB_TOKEN to get release data.");
-  requestOptions.headers['Authorization'] = `token: ${githubToken}`
-} else {
-  console.log("GITHUB_TOKEN is not available. Subsequent GitHub API call may fail due to API limit.");
+const jsonConfig = JSON.parse(fs.readFileSync("./.header-config.json"))
+
+async function applyHeader(path, rule) {
+    const fileContent = fs.readFileSync(path, {encoding:'utf8', flag:'r'});
+
+    if (fileContent.match(new Regexp(rule.skipIfContains, 'gm')))
+        return
+
+    let newFileHeader = (rule.comments.start || '') + '\n';
+
+    const licenseStream = fs.createReadStream(rule.content);
+
+    const rl = readline.createInterface({
+        input: licenseStream,
+        crlfDelay: Infinity
+    });
+  
+    for await (const line of rl) {
+        newFileHeader += `${rule.comments.line || ''}${line}\n`;
+    }
+
+    newFileHeader += `${rule.comments.end || ''}\n\n`
+    fs.writeFileSync(path, `${newFileHeader}${fileContent}`, 'utf8')
 }
 
-const repoRequest = https.request(requestOptions, res => {
-  let responseData = '';
-  res.on('data', (d) => {
-    responseData += d;
-  })
-  res.on('end', () => {
-    const response = JSON.parse(responseData);
-    const stars = response.stargazers_count;
-    const license = response.license.name;
-    console.log(`Repo has ${stars} ⭐️ and is released under ${license} license`)
-    core.setOutput("stars", stars);
-    core.setOutput("license", license);
-  })
-})
-repoRequest.on("error", () => {
-  core.setFailed("Failed to fetch GitHub");
-})
-repoRequest.end()
+async function* walk(dir) {
+    for await (const d of await fs.promises.opendir(dir)) {
+        const entry = path.join(dir, d.name);
+        if (d.isDirectory()) yield* walk(entry);
+        else if (d.isFile()) yield entry;
+    }
+}
+
+async function main() {
+    try {
+        const currentRepoGit = simpleGit();
+        for (const srcFolder of jsonConfig.srcFolders) {
+            for await (const path of walk(srcFolder)) {
+                for (let rule of jsonConfig.rules) {
+                    for (let match of rule.match) {
+                        if (path.match(new RegExp(match, 'g'))) {
+                            await applyHeader(path, rule);
+                        }
+                    }
+                }
+            }
+        }
+        currentRepoGit.addConfig('user.name', core.getInput('gitname')) 
+        currentRepoGit.addConfig('user.email', core.getInput('gitmail'))
+    } catch (error) {
+        core.setFailed(error)
+    }
+}
+
+main()

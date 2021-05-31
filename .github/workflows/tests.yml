@@ -1,3 +1,21 @@
+<!--
+   ~ license-start
+   ~ 
+   ~ Copyright (C) 2021 Sogei s.p.a. and all other contributors
+   ~ 
+   ~ Licensed under the Apache License, Version 2.0 (the "License");
+   ~ you may not use this file except in compliance with the License.
+   ~ You may obtain a copy of the License at
+   ~ 
+   ~     http://www.apache.org/licenses/LICENSE-2.0
+   ~ 
+   ~ Unless required by applicable law or agreed to in writing, software
+   ~ distributed under the License is distributed on an "AS IS" BASIS,
+   ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   ~ See the License for the specific language governing permissions and
+   ~ limitations under the License.
+-->
+
 name: Test
 on:
   push:
@@ -9,14 +27,3 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Get Stars and License
-        uses: ./
-        id: sample
-        with:
-          repo: "italia/publiccode-parser-action"
-      - name: Check Stars and License
-        run: |
-          test -n "${{ steps.sample.outputs.stars }}"
-          echo "${{ steps.sample.outputs.stars }}"
-          test -n "${{ steps.sample.outputs.license }}"
-          echo "${{ steps.sample.outputs.license }}"

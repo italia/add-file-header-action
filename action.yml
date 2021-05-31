@@ -1,21 +1,16 @@
-name: 'Action name'
-description: 'Action description'
+name: 'Add file header'
+description: 'GitHub Action to add header files programmatically.'
 author: 'italia'
 
 inputs:
-  github_token:
-    description: 'GITHUB_TOKEN'
-    default: '${{ github.token }}'
-  repo:
-    description: 'GitHub repository. e.g. italia/publiccode-parser-action'
-    default: '${{ github.repository }}'
-    required: true
-
-outputs:
-  stars:
-    description: 'The stars of the repository'
-  license:
-    description: 'The license used in the repository'
+  gitname:
+    description: 'Git name configuration for bump commit'
+    required: false
+    default: 'Add headers bot'
+  gitmail:
+    description: 'Git mail configuration for bump commit'
+    required: false
+    default: ''
 
 runs:
   using: 'node12'

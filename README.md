@@ -1,21 +1,39 @@
-# GitHub JavaScript action template
+# Add file header GitHub Action
 
 [![Join the #publiccode channel](https://img.shields.io/badge/Slack%20channel-%23publiccode-blue.svg?logo=slack)](https://developersitalia.slack.com/messages/CAM3F785T)
 [![Get invited](https://slack.developers.italia.it/badge.svg)](https://slack.developers.italia.it/)
 
-This is a template repository for [creating a GitHub JavaScript action](https://docs.github.com/en/actions/creating-actions/creating-a-javascript-action).
-
-Click `Use this template` button to create your action based on this template.
-
-A sample action to get GitHub star counts and license from a given repository.
+GitHub Action to add header files programmatically.
 
 ## Inputs
 
 The following inputs briefly explained here are fully declared and documented in the [action.yaml](action.yaml):
 
-* `repo` [**Required**] - GitHub repository to fetch (default `${{ github.repository }}`)
+* `gitname` [**Optional**] - Git name configuration for bump commit if you use a Pull Request action (default `Add headers bot`)
 
-* `github_token` [**Optional**] - GitHub token to interact with GitHub API (default `${{ github.token }}`)
+* `gitmail` [**Optional**] - Git mail configuration for bump commit if you use a Pull Request action (default `''`)
+
+### Configuration file
+
+Example
+
+```json
+{ 
+    "srcFolders": ["./"],
+    "rules": [
+        {
+            "match": [".*\\.xml"],
+            "skipIfContains": "license-start",
+            "comments": {
+                "start": "<!--",
+                "line": "   ~ ",
+                "end": "-->"
+            },
+            "content": "default_license_header.txt"
+        }
+    ]
+}
+```
 
 ## Examples
 
@@ -31,9 +49,7 @@ jobs:
     name: Get Stars and License
     steps:
     - uses: actions/checkout@v2
-    - uses: italia/js-action-template@v1
-      with:
-        repo: "italia/publiccode-parser-action"
+    - uses: italia/add-file-header-action@v1
 ```
 
 ## Build the action
