@@ -10,7 +10,7 @@ const jsonConfig = JSON.parse(fs.readFileSync("./.header-config.json"))
 async function applyHeader(path, rule) {
     const fileContent = fs.readFileSync(path, {encoding:'utf8', flag:'r'});
 
-    if (fileContent.match(new Regexp(rule.skipIfContains, 'gm')))
+    if (fileContent.match(new RegExp(rule.skipIfContains, 'gm')))
         return
 
     let newFileHeader = (rule.comments.start || '') + '\n';
@@ -54,6 +54,7 @@ async function main() {
         }
         currentRepoGit.addConfig('user.name', core.getInput('gitname')) 
         currentRepoGit.addConfig('user.email', core.getInput('gitmail'))
+        currentRepoGit.add('.').commit(`chore: add missing headers to files`)
     } catch (error) {
         core.setFailed(error)
     }
